@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { Search, RefreshCw, Star, StarOff, TrendingUp, ShieldAlert, Clock3, Download, Settings2, Activity, Wifi } from 'lucide-react'
 import './style.css'
 
-const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const API = 'https://swingedge15-backend.onrender.com'
 const fmt = n => n == null || Number.isNaN(Number(n)) ? '—' : Number(n).toLocaleString('en-IN', {maximumFractionDigits: 2})
 const pct = n => n == null ? '—' : `${Number(n)>0?'+':''}${fmt(n)}%`
 function App() {
