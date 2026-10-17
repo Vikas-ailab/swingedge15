@@ -10,6 +10,7 @@ function App() {
   const [query, setQuery] = useState('')
   const [symbol, setSymbol] = useState('RELIANCE')
   const [data, setData] = useState(null)
+  const [hourlyData, setHourlyData] = useState(null);
   const [universe, setUniverse] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -36,16 +37,37 @@ function App() {
     fetch(`${API}/universe`).then(r=>r.json()).then(d=>setUniverse(d.symbols||[])).catch(()=>{})
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{})
   }, [])
-  async function load(sym=symbol) {
-    setLoading(true); setError('')
+  
+async function load(sym=symbol) {
+    setLoading(true);
+    setError('');
     try {
-      const res = await fetch(`${API}/analyze/${encodeURIComponent(sym)}?fundamentals=${fundamentals}`)
-      const body = await res.json()
-      if (!res.ok) throw new Error(body.detail || 'Unable to load this symbol.')
-      setData(body); setSymbol(body.symbol); setLastUpdated(new Date())
-    } catch(e) { setError(`${e.message}. Check that the backend is running and the NSE symbol is correct.`) }
-    finally { setLoading(false) }
+      const res = await fetch(`${API}/analyze/${encodeURIComponent(sym)}?fundamentals=${fundamentals}`);
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.detail || 'Unable to load this symbol.');
+
+      setData(body);
+      setSymbol(body.symbol);
+      setLastUpdated(new Date());
+
+      try {
+        const hourlyRes = await fetch(`${API}/hourly/${encodeURIComponent(body.symbol)}`);
+        const hourlyBody = await hourlyRes.json();
+        if (hourlyRes.ok) {
+          setHourlyData(hourlyBody);
+        } else {
+          setHourlyData(null);
+        }
+      } catch (hourlyError) {
+        setHourlyData(null);
+      }
+    } catch(e) {
+      setError(`${e.message}. Check that the backend is running and the NSE symbol is correct.`);
+    } finally {
+      setLoading(false);
+    }
   }
+
   useEffect(() => { load('RELIANCE') }, [])
   useEffect(() => {
     if (!auto || tab !== 'analyze') return
@@ -139,6 +161,28 @@ function App() {
         </section>
         {error && <div className="error-box">{error}</div>}
         {data && <StockCard data={data} saved={watchlist.includes(data.symbol)} toggleWatch={()=>toggleWatch(data.symbol)} loading={loading} refresh={()=>load(data.symbol)} lastUpdated={lastUpdated}/>}
+        
+{hourlyData && <section className="panel">
+  <h3>Hourly Trend · {hourlyData.symbol}</h3>
+  <div className="metrics-grid">
+    <div className="metric">
+      <span>Hourly Price</span>
+      <strong>₹{hourlyData.last_price}</strong>
+    </div>
+    <div className="metric">
+      <span>Hourly Trend</span>
+      <strong>{hourlyData.hourly_trend}</strong>
+    </div>
+  </div>
+  <p className="muted">
+    Last candle: {new Date(hourlyData.as_of).toLocaleString('en-IN')}
+  </p>
+  <p className="muted">
+    Hourly trend is an entry-timing aid, not a guaranteed signal.
+    Data may be delayed.
+  </p>
+</section>}
+
       </>}
       {tab==='scan' && <section className="panel scan-panel">
         <div className="section-title">Batch scan <span className="pill">Up to 50</span></div>
