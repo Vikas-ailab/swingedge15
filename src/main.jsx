@@ -37,15 +37,33 @@ function App() {
     fetch(`${API}/universe`).then(r=>r.json()).then(d=>setUniverse(d.symbols||[])).catch(()=>{})
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{})
   }, [])
-  async function load(sym=symbol) {
-    setLoading(true); setError('')
+  
+async function load(sym=symbol) {
+    setLoading(true);
+    setError('');
     try {
-      const res = await fetch(`${API}/analyze/${encodeURIComponent(sym)}?fundamentals=${fundamentals}`)
-      const body = await res.json()
-      if (!res.ok) throw new Error(body.detail || 'Unable to load this symbol.')
-      setData(body); setSymbol(body.symbol); setLastUpdated(new Date())
-    } catch(e) { setError(`${e.message}. Check that the backend is running and the NSE symbol is correct.`) }
-    finally { setLoading(false) }
+      const res = await fetch(`${API}/analyze/${encodeURIComponent(sym)}?fundamentals=${fundamentals}`);
+      const body = await res.json();
+      if (!res.ok) throw new Error(body.detail || 'Unable to load this symbol.');
+
+      setData(body);
+      setSymbol(body.symbol);
+      setLastUpdated(new Date());
+
+      try {
+        const hourlyRes = await fetch(`${API}/hourly/${encodeURIComponent(body.symbol)}`);
+        const hourlyBody = await hourlyRes.json();
+        setHourlyData(hourlyRes.ok ? hourlyBody : null);
+      } catch (hourlyError) {
+        setHourlyData(null);
+      }
+    } catch(e) {
+      setError(`${e.message}. Check that the backend is running and the NSE symbol is correct.`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   }
   useEffect(() => { load('RELIANCE') }, [])
   useEffect(() => {
