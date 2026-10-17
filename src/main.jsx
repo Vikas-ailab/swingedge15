@@ -10,6 +10,7 @@ function App() {
   const [query, setQuery] = useState('')
   const [symbol, setSymbol] = useState('RELIANCE')
   const [data, setData] = useState(null)
+  const [hourlyData, setHourlyData] = useState(null)
   const [universe, setUniverse] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
