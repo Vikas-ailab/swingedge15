@@ -157,6 +157,7 @@ async function load(sym=symbol) {
         </section>
         {error && <div className="error-box">{error}</div>}
         {data && <StockCard data={data} saved={watchlist.includes(data.symbol)} toggleWatch={()=>toggleWatch(data.symbol)} loading={loading} refresh={()=>load(data.symbol)} lastUpdated={lastUpdated}/>}
+
 {hourlyData && <section className="panel">
   <h3>Hourly Trend · {hourlyData.symbol}</h3>
   <div className="metrics-grid">
@@ -170,28 +171,27 @@ async function load(sym=symbol) {
     </div>
   </div>
   <p className="muted">
-  Latest hourly data: {new Date(hourlyData.as_of).toLocaleString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-    timeZone: 'Asia/Kolkata'
-  })} IST
-</p>
-<p className="muted">
-  Market status: {new Date().toLocaleDateString('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    weekday: 'long'
-  }) === 'Saturday' || new Date().toLocaleDateString('en-IN', {
-    timeZone: 'Asia/Kolkata',
-    weekday: 'long'
-  }) === 'Sunday' ? 'Market closed — showing latest available session data.' : 'Check timestamp; data may be delayed.'}
-</p>
+    Latest hourly data: {new Date(hourlyData.as_of).toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: 'Asia/Kolkata'
+    })} IST
+  </p>
+  <p className="muted">
+    Market status: {['Saturday', 'Sunday'].includes(
+      new Date().toLocaleDateString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        weekday: 'long'
+      })
+    ) ? 'Market closed — showing latest available session data.' : 'Check timestamp; data may be delayed.'}
   </p>
   <p className="muted">Hourly data may be delayed.</p>
 </section>}
+
 
       </>}
       {tab==='scan' && <section className="panel scan-panel">
