@@ -139,6 +139,24 @@ function App() {
         </section>
         {error && <div className="error-box">{error}</div>}
         {data && <StockCard data={data} saved={watchlist.includes(data.symbol)} toggleWatch={()=>toggleWatch(data.symbol)} loading={loading} refresh={()=>load(data.symbol)} lastUpdated={lastUpdated}/>}
+{hourlyData && <section className="panel">
+  <h3>Hourly Trend · {hourlyData.symbol}</h3>
+  <div className="metrics-grid">
+    <div className="metric">
+      <span>Hourly Price</span>
+      <strong>₹{hourlyData.last_price}</strong>
+    </div>
+    <div className="metric">
+      <span>Hourly Trend</span>
+      <strong>{hourlyData.hourly_trend}</strong>
+    </div>
+  </div>
+  <p className="muted">
+    Last candle: {new Date(hourlyData.as_of).toLocaleString('en-IN')}
+  </p>
+  <p className="muted">Hourly data may be delayed.</p>
+</section>}
+
       </>}
       {tab==='scan' && <section className="panel scan-panel">
         <div className="section-title">Batch scan <span className="pill">Up to 50</span></div>
