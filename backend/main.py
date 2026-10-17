@@ -201,7 +201,7 @@ def analyze_symbol(symbol: str, include_fundamentals: bool = False, use_cache: b
     stop = round(max(latest - 2 * atr_v, .01), 2) if atr_v else round(latest * .95, 2)
     target_sets = _target_sets(latest, stop)
     label = "WATCH FOR ENTRY" if score >= 68 and rsi_v is not None and rsi_v < 75 else (
-        "WATCHLIST — WAIT" if score >= 48 else "NO TRADE SETUP")
+        "ENTER" if score > 80 else "KEEP ON RADAR" if score >= 50 else "NO TRADE")
     sentiment = market_sentiment()
     # Sentiment is a modest overlay, never represented as news analysis.
     sentiment_adjustment = 5 if sentiment["label"] == "Positive" else -5 if sentiment["label"] == "Cautious" else 0
