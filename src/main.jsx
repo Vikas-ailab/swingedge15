@@ -64,7 +64,6 @@ async function load(sym=symbol) {
     }
   }
 
-  }
   useEffect(() => { load('RELIANCE') }, [])
   useEffect(() => {
     if (!auto || tab !== 'analyze') return
