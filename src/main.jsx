@@ -216,7 +216,18 @@ function StockCard({data:d,saved,toggleWatch,loading,refresh,lastUpdated}) {
     <div className="stock-heading"><div><div className="symbol-line"><h2>{d.symbol}</h2><button className={`star-btn ${saved?'saved':''}`} onClick={toggleWatch}>{saved?<Star size={18} fill="currentColor"/>:<Star size={18}/>}</button></div><span className="muted tiny">NSE · Daily candles · As of {d.as_of}</span></div><button className="refresh-btn" onClick={refresh} disabled={loading}><RefreshCw size={16} className={loading?'spin':''}/></button></div>
     <div className="price-line"><strong>₹{fmt(d.price)}</strong><span className={d.change_pct>=0?'positive':'negative'}>{pct(d.change_pct)} today</span></div>
     <div className="chart-wrap"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><defs><linearGradient id="fade" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#55e4a5" stopOpacity=".25"/><stop offset="100%" stopColor="#55e4a5" stopOpacity="0"/></linearGradient></defs><polygon points={`0,100 ${points} 100,100`} fill="url(#fade)"/><polyline points={points} fill="none" stroke="#55e4a5" strokeWidth="1.6" vectorEffect="non-scaling-stroke"/></svg><div className="chart-labels"><span>90 trading days</span><span>Latest close</span></div></div>
-    <div className="signal-box"><div><span className="muted tiny">RULE-BASED SCORE</span><div className="signal-title">{d.signal}</div></div><div className={`score-ring ${d.score>=68?'good':d.score>=48?'mid':'bad'}`}><b>{d.score}</b><small>/100</small></div></div>
+    <div className={`signal-box ${d.score > 80 ? 'signal-enter' : d.score >= 50 ? 'signal-radar' : 'signal-no-trade'}`}>
+  <div>
+    <span className="muted tiny">RULE-BASED SCORE</span>
+    <div className="signal-title">
+      {d.score > 80 ? '🐂 ENTER' : d.score >= 50 ? '🔭 KEEP ON RADAR' : '🐻 NO TRADE'}
+    </div>
+    <small>{d.score > 80 ? 'Strong score — verify entry conditions' : d.score >= 50 ? 'Wait for stronger confirmation' : 'Setup does not qualify'}</small>
+  </div>
+  <div className={`score-ring ${d.score > 80 ? 'good' : d.score >= 50 ? 'mid' : 'bad'}`}>
+    <b>{d.score}</b><small>/100</small>
+  </div>
+</div>
     <div className="target-grid"><div><span>10% target</span><b>₹{fmt(d.target_10pct)}</b><small>Not a forecast</small></div><div><span>Indicative stop</span><b>₹{fmt(d.indicative_stop)}</b><small>ATR-based reference</small></div><div><span>Reward / risk</span><b>{d.reward_risk==null?'—':`${fmt(d.reward_risk)}x`}</b><small>Before costs/slippage</small></div></div>
     <div className="section-title">Momentum & trend</div>
     <div className="metrics-grid">{[['RSI (14)',fmt(d.rsi14)],['ADX (14)',fmt(d.adx14)],['MACD',fmt(d.macd)],['Rel. volume',d.relative_volume==null?'—':`${fmt(d.relative_volume)}x`],['5-day return',pct(d.return_5d_pct)],['20-day return',pct(d.return_20d_pct)],['SMA 20',fmt(d.sma20)],['SMA 50',fmt(d.sma50)],['SMA 200',fmt(d.sma200)],['ATR (14)',fmt(d.atr14)]].map(([k,v])=><div className="metric" key={k}><span>{k}</span><b>{v}</b></div>)}</div>
