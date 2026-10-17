@@ -170,7 +170,25 @@ async function load(sym=symbol) {
     </div>
   </div>
   <p className="muted">
-    Last candle: {new Date(hourlyData.as_of).toLocaleString('en-IN')}
+  Latest hourly data: {new Date(hourlyData.as_of).toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'Asia/Kolkata'
+  })} IST
+</p>
+<p className="muted">
+  Market status: {new Date().toLocaleDateString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    weekday: 'long'
+  }) === 'Saturday' || new Date().toLocaleDateString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    weekday: 'long'
+  }) === 'Sunday' ? 'Market closed — showing latest available session data.' : 'Check timestamp; data may be delayed.'}
+</p>
   </p>
   <p className="muted">Hourly data may be delayed.</p>
 </section>}
