@@ -355,7 +355,65 @@ def universe(q: Optional[str] = None):
     return {"count": len(symbols), "symbols": symbols[:500], "source": "Nifty Indices constituent CSV or fallback list"}
 
 
-@app.get("/analyze/{symbol}")
+@app.get("/hourly/{symbol}")
+def hourly_analysis(symbol: str):
+    symbol = symbol.strip().upper().replace(".NS", "")
+    if not symbol or not symbol.replace("-", "").replace("&", "").isalnum():
+        raise HTTPException(400, "Enter a valid NSE symbol.")
+
+    try:
+        hist = yf.Ticker(symbol + ".NS").history(
+            period="60d",
+            interval="1h",
+            auto_adjust=True,
+            actions=False
+        )
+
+        if hist is None or hist.empty:
+            raise HTTPException(
+                404, f"No hourly candle data available for {symbol}."
+            )
+
+        hist = hist.dropna(subset=["Close"])
+        close = hist["Close"]
+        ema12 = close.ewm(span=12, adjust=False).mean()
+        ema26 = close.ewm(span=26, adjust=False).mean()
+        macd = ema12 - ema26
+        signal = macd.ewm(span=9, adjust=False).mean()
+
+        return {
+            "symbol": symbol,
+            "data_interval": "1h candles",
+            "data_source": "Yahoo Finance via yfinance",
+            "as_of": hist.index[-1].isoformat(),
+            "last_price": round(float(close.iloc[-1]), 2),
+            "hourly_trend": (
+                "Bullish" if macd.iloc[-1] > signal.iloc[-1]
+                else "Bearish"
+            ),
+            "candles": [
+                {
+                    "time": idx.isoformat(),
+                    "open": round(float(row["Open"]), 2),
+                    "high": round(float(row["High"]), 2),
+                    "low": round(float(row["Low"]), 2),
+                    "close": round(float(row["Close"]), 2),
+                    "volume": int(row["Volume"])
+                }
+                for idx, row in hist.tail(120).iterrows()
+            ],
+            "note": (
+                "Hourly data may be delayed or unavailable. "
+                "It is not a guaranteed real-time feed."
+            )
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            502, f"Hourly data error for {symbol}: {str(exc)[:150]}"
+        )@app.get("/analyze/{symbol}")
 def analyze(symbol: str, fundamentals: bool = False):
     return analyze_symbol(symbol, fundamentals)
 
