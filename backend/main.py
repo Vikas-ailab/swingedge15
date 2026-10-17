@@ -413,7 +413,9 @@ def hourly_analysis(symbol: str):
     except Exception as exc:
         raise HTTPException(
             502, f"Hourly data error for {symbol}: {str(exc)[:150]}"
-        )@app.get("/analyze/{symbol}")
+        )
+        
+        @app.get("/analyze/{symbol}")
 def analyze(symbol: str, fundamentals: bool = False):
     return analyze_symbol(symbol, fundamentals)
 
