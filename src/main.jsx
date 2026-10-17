@@ -202,6 +202,41 @@ async function load(sym=symbol) {
         {scanResults.length>0 && <><div className="scan-head"><b>{scanResults.length} results</b><button className="text-btn" onClick={exportCSV}><Download size={15}/> CSV</button></div><div className="result-list">{scanResults.map(r=><button className="result-row" key={r.symbol} onClick={()=>{setTab('analyze');setQuery(r.symbol);load(r.symbol)}}><span className="result-symbol">{r.symbol}<small>{r.signal}</small></span><span className="result-metrics"><b>{fmt(r.price)}</b><small>Score {r.score}/100</small></span><span className={`score ${r.score>=68?'good':r.score>=48?'mid':'bad'}`}>{r.score}</span></button>)}</div></>}
         {scanErrors.map((e,i)=><p className="error-inline" key={i}>{e.symbol}: {e.error}</p>)}
       </section>}
+      
+      <section className="panel">
+        <div className="section-title">📊 All Trade Signals</div>
+
+        <div className="section-title">🐂 ENTER — Score above 80</div>
+        <div className="result-list">
+          {scanResults.filter(r => r.score > 80).map(r =>
+            <button className="result-row" key={`enter-${r.symbol}`}
+              onClick={() => { setTab('analyze'); setQuery(r.symbol); load(r.symbol); }}>
+              <span className="result-symbol">{r.symbol}<small>🐂 ENTER</small></span>
+              <span className="result-metrics"><b>{fmt(r.price)}</b><small>Target ₹{fmt(r.target_10pct)}</small></span>
+              <span className="score good">{r.score}</span>
+            </button>
+          )}
+          {scanResults.filter(r => r.score > 80).length === 0 &&
+            <p className="muted">No ENTER signals in the current scan.</p>}
+        </div>
+
+        <div className="section-title">🔭 KEEP ON RADAR — Score 50–80</div>
+        <div className="result-list">
+          {scanResults.filter(r => r.score >= 50 && r.score <= 80).map(r =>
+            <button className="result-row" key={`radar-${r.symbol}`}
+              onClick={() => { setTab('analyze'); setQuery(r.symbol); load(r.symbol); }}>
+              <span className="result-symbol">{r.symbol}<small>🔭 KEEP ON RADAR</small></span>
+              <span className="result-metrics"><b>{fmt(r.price)}</b><small>Target ₹{fmt(r.target_10pct)}</small></span>
+              <span className="score mid">{r.score}</span>
+            </button>
+          )}
+          {scanResults.filter(r => r.score >= 50 && r.score <= 80).length === 0 &&
+            <p className="muted">No KEEP ON RADAR signals in the current scan.</p>}
+        </div>
+
+        <p className="muted">Lists show qualifying stocks from your current Scan results. Run Scan to refresh them.</p>
+      </section>
+
       {tab==='watchlist' && <section className="panel"><div className="section-title">Your watchlist</div><p className="muted">Saved on this device.</p>{watchlist.length===0?<p className="muted">No saved stocks yet. Add one from Analyze.</p>:watchlist.map(s=><div className="watch-row" key={s}><button onClick={()=>{setTab('analyze');setQuery(s);load(s)}}><b>{s}</b><small>Open analysis</small></button><button className="icon-btn" onClick={()=>toggleWatch(s)} aria-label={`Remove ${s}`}><StarOff size={17}/></button></div>)}</section>}
       <section className="disclaimer"><ShieldAlert size={17}/><p><b>Research tool, not a promise.</b> A 10% return within 15 days cannot be guaranteed. Validate signals, liquidity, news and price with your broker before acting.</p></section>
     </main>
