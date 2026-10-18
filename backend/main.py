@@ -346,13 +346,69 @@ def health():
     }
 
 
-@app.get("/universe")
-def universe(q: Optional[str] = None):
-    symbols = get_universe()
-    if q:
-        q = q.strip().upper()
-        symbols = [s for s in symbols if q in s]
-    return {"count": len(symbols), "symbols": symbols[:500], "source": "Nifty Indices constituent CSV or fallback list"}
+
+def get_universe():
+    now = datetime.now(timezone.utc)
+
+    # Reuse a valid cached Nifty 500 list for 24 hours.
+    if (
+        _universe_cache["at"]
+        and (now - _universe_cache["at"]).total_seconds() < 86400
+        and _universe_cache["symbols"]
+    ):
+        return _universe_cache["symbols"]
+
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "text/csv,*/*",
+        }
+        response = requests.get(
+            UNIVERSE_URL,
+            headers=headers,
+            timeout=15,
+        )
+        response.raise_for_status()
+
+        frame = pd.read_csv(pd.io.common.StringIO(response.text))
+
+        col = next(
+            (
+                c for c in frame.columns
+                if c.strip().lower() in ("symbol", "index symbol")
+            ),
+            None,
+        )
+
+        if not col:
+            raise ValueError("The downloaded file has no symbol column.")
+
+        symbols = sorted(
+            set(
+                frame[col]
+                .dropna()
+                .astype(str)
+                .str.strip()
+                .str.upper()
+            )
+        )
+
+        if len(symbols) < 450:
+            raise ValueError(
+                f"Expected approximately 500 constituents; received {len(symbols)}."
+            )
+
+        _universe_cache.update(at=now, symbols=symbols)
+        return symbols
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Unable to verify the Nifty 500 constituent list. "
+                "No fallback scan was performed. Please retry later."
+            ),
+        ) from exc
 
 
 @app.get("/hourly/{symbol}")
