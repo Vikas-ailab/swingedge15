@@ -208,7 +208,7 @@ async function load(sym=symbol) {
 
         <div className="section-title">🐂 ENTER — Score above 80</div>
         <div className="result-list">
-          {scanResults.filter(r => r.score > 80).map(r =>
+          {[...scanResults].filter(r => r.score > 80).sort((a, b) => b.score - a.score).map(r =>
             <button className="result-row" key={`enter-${r.symbol}`}
               onClick={() => { setTab('analyze'); setQuery(r.symbol); load(r.symbol); }}>
               <span className="result-symbol">{r.symbol}<small>🐂 ENTER</small></span>
@@ -222,7 +222,7 @@ async function load(sym=symbol) {
 
         <div className="section-title">🔭 KEEP ON RADAR — Score 50–80</div>
         <div className="result-list">
-          {scanResults.filter(r => r.score >= 50 && r.score <= 80).map(r =>
+          {[...scanResults].filter(r => r.score >= 50 && r.score <= 80).sort((a, b) => b.score - a.score).map(r =>
             <button className="result-row" key={`radar-${r.symbol}`}
               onClick={() => { setTab('analyze'); setQuery(r.symbol); load(r.symbol); }}>
               <span className="result-symbol">{r.symbol}<small>🔭 KEEP ON RADAR</small></span>
