@@ -42,30 +42,70 @@ def utc_now():
     return datetime.now(timezone.utc).isoformat()
 
 
+
 def get_universe():
     now = datetime.now(timezone.utc)
-    if (_universe_cache["at"] and
-            (now - _universe_cache["at"]).total_seconds() < 86400 and
-            _universe_cache["symbols"]):
+
+    # Reuse the verified list for 24 hours.
+    if (
+        _universe_cache["at"]
+        and (now - _universe_cache["at"]).total_seconds() < 86400
+        and _universe_cache["symbols"]
+    ):
         return _universe_cache["symbols"]
+
     try:
-        headers = {"User-Agent": "Mozilla/5.0", "Accept": "text/csv,*/*"}
-        response = requests.get(UNIVERSE_URL, headers=headers, timeout=12)
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Accept": "text/csv,*/*",
+        }
+        response = requests.get(
+            UNIVERSE_URL,
+            headers=headers,
+            timeout=15,
+        )
         response.raise_for_status()
-        frame = pd.read_csv(pd.io.common.StringIO(response.text))
-        col = next((c for c in frame.columns
-                    if c.strip().lower() in ("symbol", "index symbol")), None)
-        if col:
-            symbols = sorted(set(frame[col].dropna().astype(str).str.strip().str.upper()))
-            if symbols:
-                _universe_cache.update(at=now, symbols=symbols)
-                return symbols
-    except Exception:
-        pass
-    fallback = ["RELIANCE", "HDFCBANK", "ICICIBANK", "INFY", "TCS", "LT",
-                "SBIN", "BHARTIARTL", "ITC", "AXISBANK", "TATAMOTORS",
-                "SUNPHARMA", "MARUTI", "TRENT", "BEL"]
-    return fallback
+
+        frame = pd.read_csv(
+            pd.io.common.StringIO(response.text)
+        )
+
+        col = next(
+            (
+                c for c in frame.columns
+                if c.strip().lower() in ("symbol", "index symbol")
+            ),
+            None,
+        )
+
+        if col is None:
+            raise ValueError("Symbol column not found in Nifty 500 CSV.")
+
+        symbols = sorted(
+            set(
+                frame[col]
+                .dropna()
+                .astype(str)
+                .str.strip()
+                .str.upper()
+            )
+        )
+
+        if not symbols:
+            raise ValueError("Nifty 500 CSV returned no symbols.")
+
+        _universe_cache.update(at=now, symbols=symbols)
+        return symbols
+
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Unable to load the Nifty 500 constituent list. "
+                "No fallback scan was performed. Please retry later."
+            ),
+        ) from exc
+
     
 @app.get("/universe")
 def universe(q: Optional[str] = None):
