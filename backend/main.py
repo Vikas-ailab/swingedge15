@@ -66,6 +66,19 @@ def get_universe():
                 "SBIN", "BHARTIARTL", "ITC", "AXISBANK", "TATAMOTORS",
                 "SUNPHARMA", "MARUTI", "TRENT", "BEL"]
     return fallback
+    
+@app.get("/universe")
+def universe(q: Optional[str] = None):
+    symbols = get_universe()
+    if q:
+        q = q.strip().upper()
+        symbols = [s for s in symbols if q in s]
+    return {
+        "count": len(symbols),
+        "symbols": symbols[:500],
+        "source": "Nifty Indices constituent CSV",
+    }
+
 
 
 def rsi(series, period=14):
